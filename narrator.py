@@ -6,10 +6,28 @@ import time
 import simpleaudio as sa
 import errno
 from elevenlabs import generate, play, set_api_key, voices
+from dotenv import load_dotenv
+# Load environment variables from .env file
+load_dotenv()
+
+# Get API keys from environment variables
+elevenlabs_api_key = os.getenv("ELEVENLABS_API_KEY")
+openai_api_key = os.getenv("OPENAI_API_KEY")
+narrator_api_key = os.getenv("NARRATOR_API_KEY")
+replicate_api_key = os.getenv("REPLICATE_API_KEY")
+elevenlabs_voice_id = os.getenv("ELEVENLABS_VOICE_ID")
+
+# Check if required API keys are set
+if not elevenlabs_api_key:
+    raise ValueError("ELEVENLABS_API_KEY is not set in the .env file.")
+if not openai_api_key:
+    raise ValueError("OPENAI_API_KEY is not set in the .env file.")
+
+# Set API keys
+set_api_key(elevenlabs_api_key)
+os.environ["OPENAI_API_KEY"] = openai_api_key
 
 client = OpenAI()
-
-set_api_key(os.environ.get("ELEVENLABS_API_KEY"))
 
 def encode_image(image_path):
     while True:
@@ -46,7 +64,9 @@ def generate_new_line(base64_image):
                 {"type": "text", "text": "Describe this image"},
                 {
                     "type": "image_url",
-                    "image_url": f"data:image/jpeg;base64,{base64_image}",
+                    "image_url": {
+                        "url": f"data:image/jpeg;base64,{base64_image}"
+                    },
                 },
             ],
         },
@@ -55,7 +75,7 @@ def generate_new_line(base64_image):
 
 def analyze_image(base64_image, script):
     response = client.chat.completions.create(
-        model="gpt-4-vision-preview",
+        model="gpt-4o-mini",
         messages=[
             {
                 "role": "system",
